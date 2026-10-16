@@ -24,6 +24,8 @@ let segundosPomodoro = TEMPO_FOCO;
 let intervaloPomodoro = null;
 let pomodoroRodando = false;
 
+let modoAtual = "foco";
+
 // 3. FUNÇÕES UTILITÁRIAS
 // cronômetro
 function formatarTempo(totalSegundos) {
@@ -39,6 +41,14 @@ function formatarMinutoSegundos(totalSegundos) {
     const segundos = String(totalSegundos % 60).padStart(2, "0");
     return `${minutos}:${segundos}`;
 }
+
+// feedback visual - modo ativo
+function marcarModoAtivo(botaoAtivo) {
+    btnFoco.classList.remove("ativo");
+    btnPausa.classList.remove("ativo");
+    botaoAtivo.classList.add("ativo");
+}
+
 
 // 4. RELÓGIO
 function atualizarRelogio() {
@@ -103,7 +113,13 @@ function iniciarPomodoro(segundosIniciais) {
             intervaloPomodoro = null;
             pomodoroRodando = false;
             tocarAlerta();
-            alert("Tempo esgotado!");
+
+            //perguntar ao usuário o que fazer
+            const proximo = confirm("Tempo esgotado! Iniciar o próximo ciclo?");
+            if (proximo) {
+                if (displayPomodoro.textContent.startsWith("00") === false) {
+                }
+            }
         }
     }, 1000);
 }
@@ -117,17 +133,32 @@ function pararPomdoro() {
 
 function modoFoco() {
     pararPomdoro();
+    marcarModoAtivo(btnFoco);
+    modoAtual = "foco";
     iniciarPomodoro(TEMPO_FOCO);
 }
 
 function modoPausa() {
     pararPomdoro();
+    marcarModoAtivo(btnPausa);
+    modoAtual = "pausa"
     iniciarPomodoro(TEMPO_PAUSA);
 }
 
 function tocarAlerta() {
-    const audio = new Audio("Alerta.mp3");
-    audio.play();
+    const contextoAudio = new (window.AudioContext || window.webkitAudioContext) ();
+    const oscilador = contextoAudio.createOscillator();
+    const ganho = contextoAudio.createGain();
+
+    oscilador.connect(ganho);
+    ganho.connect(contextoAudio.destination);
+
+    oscilador.type = "sine";
+    oscilador.frequency = 880;
+    ganho.gain.value = 0.3;
+
+    oscilador.start();
+    oscilador.stop(contextoAudio.currentTime + 0.5);
 }
 
 
